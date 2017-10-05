@@ -12,31 +12,16 @@
   "permissions": [
     "http://*/*",
     "https://*/*",
-    "tabs",
-    "activeTab"
+    "tabs"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["model.js"]
   },
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["key_event.js"],
-      "css": ["seutayireul.css"]
+      "js": ["controller.js"],
+      "css": ["styles.css"]
     }
-  ],
-  "commands": {
-    "save" : {
-        "suggested_key": {
-             "default": "Alt+Shift+S" 
-        },
-        "description": "Save a link"
-    },
-    "random": {
-        "suggested_key": {
-            "default": "Alt+Shift+L"
-        },
-        "description": "Load a random link"
-    }
-  }
+  ]
 }
