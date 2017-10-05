@@ -15,7 +15,7 @@ function onKeyDown (e) {
 
 			response.payload.tabs.forEach(tab => {
 				const item = document.createElement('li');
-				item.appendChild(document.createTextNode(tab));
+				item.appendChild(document.createTextNode(tab.title));
 				hud.appendChild(item);
 			});
 

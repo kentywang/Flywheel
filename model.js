@@ -24,9 +24,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	case "keyDown":
 		state.keyHeld = true;
 
-		getTabList().then(r => {
-			flywheel.tabs = r;
-			console.log(flywheel.tabs);
+		getTabList().then(tabList => {
+			flywheel.tabs = tabList;
+			
 			sendResponse({action: state.keyHeld, payload: flywheel});
 		});
 
@@ -35,16 +35,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	default:
 		break;
 	}
+
+	// need this to send async response
+	return true;
 });
 
-async function getTabList () {
-	let result;
-
-	await chrome.windows.getLastFocused({populate: true}, window => {
-		result = window.tabs.map(tab => ({title: tab.title, favIconUrl: tab.favIconUrl}));
+function getTabList () {
+	return new Promise((resolve, reject) => {
+		chrome.windows.getLastFocused({populate: true}, window => {
+			resolve(window.tabs.map(tab => ({title: tab.title, favIconUrl: tab.favIconUrl})));
+		});
 	});
-
-	return result;
 }
 
 // chrome.windows.getLastFocused({populate: true}, window =>	{
