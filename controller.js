@@ -7,8 +7,21 @@ if (window == top) {
 	window.addEventListener("keyup", onKeyUp);
 }
 
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+	switch (request.command) {
+	case "showTabs":
+		addToPage(request.payload);
+
+		break;
+
+	default:
+		break;
+	}
+});
+
 function onKeyDown (e) {
 	if (e.key === "Alt") {
+		console.log('keydown')
 		chrome.runtime.sendMessage({action: "keyDown"}, response => {
 			addToPage(response.payload);
 		});
@@ -25,22 +38,21 @@ function updatePosition (e) {
 	if (
 		Math.abs(e.movementX) > mouseSensitivityThreshold
 		|| Math.abs(e.movementY) > mouseSensitivityThreshold
+		// && document.getElementById("hud")
 	) {
-		// console.log('firingMouseMoved')
+		console.log('firingMouseMoved')
 		chrome.runtime.sendMessage({
 			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
 		}, response => {
 			cleanUp();
-
-			chrome.runtime.sendMessage({action: "cleaned"}, response => {
-				addToPage(response.payload);
-			});
+			// chrome.runtime.sendMessage({action: "cleaned"});
 		});
 	}
 }
 
 function addToPage ({flywheel, selectedTabIndex}) {
+	console.log('adding')
 	// create ordered list of tabs
 	const hud = document.createElement("ol");
 	hud.setAttribute("id", "hud");
@@ -81,6 +93,7 @@ function addToPage ({flywheel, selectedTabIndex}) {
 function cleanUp () {
 	document.getElementById("hud").remove();
 	document.removeEventListener("mousemove", updatePosition);
+	console.log('cleaned up')
 }
 
 // tasks:

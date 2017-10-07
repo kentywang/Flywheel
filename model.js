@@ -6,8 +6,9 @@ const state = {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.action) {
 	case "keyDown":
-		console.log('keyDown')
-		Promise.all([getTabList(), getActiveTab()]).then(([tabList, selectedTabIndex]) => {
+		// console.log('keyDown')
+		Promise.all([getTabList(), getActiveTab()])
+		.then(([tabList, selectedTabIndex]) => {
 			// only time we update the internal list of tabs is here
 			state.flywheel = withCoords(tabList);
 			state.selectedTabIndex = selectedTabIndex;
@@ -28,21 +29,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		console.log('mouseMoved')
 
 		// if (!isCurrentTab(state.selectedTabIndex)) {
-			sendResponse({command: "hideTabs"});
+			sendResponse({command: "cleanUp"});
 		// }
 
-		break;
+		getWindow()
+		.then(window => {
+			return switchToTabAt(window, state.selectedTabIndex);
+		})
+		.then(tab => {
+			// console.log('tab', tab)
 
-	case "cleaned":
-		console.log('cleaned')
-		switchToTabAt(state.selectedTabIndex).then(() => {
-			sendResponse({
-				command: "showTabs",
-				payload: state
+			// pass state to newly activated tab
+			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+				chrome.tabs.sendMessage(tabs[0].id, {
+					command: "showTabs",
+					payload: state
+				});
 			});
 		});
 
 		break;
+
+	// case "cleaned":
+	// 	// console.log('cleaned')
+	// 	getWindow()
+	// 	.then(window => {
+	// 		return switchToTabAt(window, state.selectedTabIndex);
+	// 	})
+	// 	.then(tab => {
+	// 		// console.log('tab', tab)
+	// 		sendResponse({
+	// 			command: "showTabs",
+	// 			payload: state
+	// 		});
+	// 	});
+
+	// 	break;
 
 	default:
 		break;
@@ -52,6 +74,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	return true;
 });
 
+// duplicate functionality w/ getWindow
 function getTabList () {
 	return new Promise((resolve, reject) => {
 		chrome.windows.getLastFocused({populate: true}, window => {
@@ -106,10 +129,19 @@ function determineSelectedTabIndex (movement, tabListLength) {
 	return Math.floor(radiansAtMouse / radiansPerTab);
 }
 
-function switchToTabAt (index) {
+function getWindow () {
 	return new Promise((resolve, reject) => {
 		chrome.windows.getLastFocused({populate: true}, window => {
-			resolve(chrome.tabs.update(window.tabs[index].id, {active: true}));
+			resolve(window);
 		});
 	});
 }
+
+function switchToTabAt (window, index) {
+	return new Promise((resolve, reject) => {
+		chrome.tabs.update(window.tabs[index].id, {active: true}, tab => {
+			resolve(tab);
+		});
+	});
+}
+
