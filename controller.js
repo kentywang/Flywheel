@@ -126,3 +126,11 @@ function cleanUp () {
 // handle multiple windows
 
 // namespace #hud
+
+// switch to newly opened tab -> kills hud and no
+// mouse listen, and active hud and mouse listen on last pg
+
+// I figured out controller js is like an instance of a tab, so when I think
+// I'm adding the active tab to the newly switched page, I be wrong
+
+// now I gotta figure out why cleanup isn't finishing to completion all the time
