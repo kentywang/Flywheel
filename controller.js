@@ -8,13 +8,11 @@
 function onKeyDown (e) {
 	if (e.key === "Alt") {
 		chrome.runtime.sendMessage({action: "keyDown"}, response => {
-			// console.log(response.payload);
-
 			// create ordered list of tabs
 			const hud = document.createElement("ol");
 			hud.setAttribute("id", "hud");
 
-			response.payload.tabs.forEach((tab, i) => {
+			response.payload.forEach((tab, i) => {
 				// create item in list
 				const item = document.createElement("li");
 				item.style.marginTop = tab.x;
@@ -46,7 +44,7 @@ function onKeyDown (e) {
 function onKeyUp (e) {
 	if (e.key === "Alt") {
 		chrome.runtime.sendMessage({action: "keyUp"}, response => {
-			// console.log(response.action);
+			// console.log(response.action, response.payload);
 
 			// remove list from doc body
 			document.getElementById("hud").remove();
@@ -57,12 +55,13 @@ function onKeyUp (e) {
 	}
 }
 
-function updatePosition(e) {
-	if (e.movementX > e.movementY) {
-		// console.log('x > y')
-	} else {
-		// console.log('x <= y')
-	}
+function updatePosition (e) {
+	chrome.runtime.sendMessage({
+		action: "mouseMove",
+		payload: {x: e.movementX, y: e.movementY}
+	}, response => {
+		console.log(response.payload);
+	});
 }
 
 // tasks:
