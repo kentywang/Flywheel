@@ -19,6 +19,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 	case "showTabs":
 		console.log('showTabs')
+		if (document.getElementById("hud")) {
+			return
+		}
+
 		// create ordered list of tabs
 		const hud = document.createElement("ol");
 		hud.setAttribute("id", "hud");
@@ -53,6 +57,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		// add list to doc body
 		document.body.appendChild(hud);                    
 
+		document.body.requestPointerLock();
 		break;
 
 	default:
@@ -66,18 +71,23 @@ if (window == top) {
 	console.log('windowTop')
 	window.addEventListener("keydown", onKeyDown);
 	window.addEventListener("keyup", onKeyUp);
+	// window.load = () => {
+	// 	console.log('didLoad')
+		// document.body.requestPointerLock();
+		// document.exitPointerLock();
+	// };
 }
 
 function onKeyDown (e) {
-	if (e.key) {
-		console.log('altkeydown')
+	if (e.key ) {
+		// console.log('altkeydown')
 		document.body.requestPointerLock();
 	}
 }
 
 function onKeyUp (e) {
-	if (e.key) {
-		console.log('altkeyup')
+	if (e.key ) {
+		// console.log('altkeyup')
 		// don't need model to tell us to clean up
 		document.getElementById("hud").remove();
 		
@@ -86,7 +96,7 @@ function onKeyUp (e) {
 }
 
 function pointerLockChanged () {
-	console.log('pointer status:', document.pointerLockElement)
+	// console.log('pointer status:', document.pointerLockElement)
 	if (document.pointerLockElement) {
 		chrome.runtime.sendMessage({action: "pointerLocked"});
 		document.addEventListener("mousemove", updatePosition);
@@ -100,6 +110,7 @@ function updatePosition (e) {
 		Math.abs(e.movementX) > mouseSensitivityThreshold
 		|| Math.abs(e.movementY) > mouseSensitivityThreshold
 	) {
+		console.log('firingMouseMoved')
 		chrome.runtime.sendMessage({
 			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
@@ -135,3 +146,5 @@ function updatePosition (e) {
 // get better mousetracking
 
 // handle multiple windows
+
+// namespace #hud
