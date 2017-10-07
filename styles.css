@@ -8,3 +8,7 @@
 #hud > li {
 	position: absolute;
 }
+
+#hud > li.selected {
+	color: red;
+}

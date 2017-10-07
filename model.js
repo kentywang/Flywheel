@@ -1,45 +1,62 @@
-const tabDistFromCenterMultiplier = 20;
-
 const state = {
-	keyHeld: false,
-	flywheel: []
+	// keyHeld: false,
+	flywheel: [],
+	selectedTabIndex: null
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.action) {
-	case "keyUp":
-		state.keyHeld = false;
+	// case "keyUp":
+	// 	state.keyHeld = false;
 
-		sendResponse({action: "showKeyState", payload: state.keyHeld});
+	// 	chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+	// 		chrome.tabs.sendMessage(tabs[0].id, {
+	// 			command: "showKeyState",
+	// 			payload: state.keyHeld
+	// 		});
+	// 	});
 
-		break;
+	// 	break;
 
 	case "keyDown":
-		state.keyHeld = true;
+		// state.keyHeld = true;
 
 		getTabList().then(tabList => {
 			// only time we update the internal list of tabs is here
-			state.flywheel = tabList;
+			state.flywheel = withCoords(tabList);
 
-			sendResponse({
-				action: "showTabs",
-				payload: withCoords(state.flywheel)
+			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+				chrome.tabs.sendMessage(tabs[0].id, {
+					command: "showTabs",
+					payload: state
+				});
 			});
 		});
 
 		break;
 
-	case "mouseMove":
-		const selectedTabIndex = determineSelectedTabIndex(
+	case "mouseMoved":
+		state.selectedTabIndex = determineSelectedTabIndex(
 			request.payload,
 			state.flywheel.length
 		);
 
-		switchToTabAt(selectedTabIndex);
+		// if (!isCurrentTab(state.selectedTabIndex)) {
+			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+				chrome.tabs.sendMessage(tabs[0].id, {command: "hideTabs"});
+			});
+		// }
 
-		sendResponse({
-			action: "showTabs",
-			payload: selectedTabIndex
+		break;
+
+	case "tabCleared":
+		switchToTabAt(state.selectedTabIndex).then(() => {
+			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+				chrome.tabs.sendMessage(tabs[0].id, {
+					command: "showTabs",
+					payload: state
+				});
+			});
 		});
 
 		break;
@@ -78,14 +95,6 @@ function withCoords (tabList) {
 		tabWithCoords.x = Math.cos(radiansAtTab);
 		tabWithCoords.y = Math.sin(radiansAtTab);
 
-		// amplify coordinates
-		tabWithCoords.x *= tabDistFromCenterMultiplier;
-		tabWithCoords.y *= tabDistFromCenterMultiplier;
-
-		// stringify with relevant CSS units
-		tabWithCoords.x += "vw";
-		tabWithCoords.y += "vh";
-
 		return tabWithCoords;
 	});
 }
@@ -113,20 +122,3 @@ function switchToTabAt (index) {
 		});
 	});
 }
-
-// chrome.windows.getLastFocused({populate: true}, window =>	{
-// 	var foundSelected = false;
-
-// 	for (var i = 0; i < window.tabs.length; i++) {
-// 		// Finding the selected tab.
-// 		if (window.tabs[i].active) {
-// 			foundSelected = true;
-// 		}
-// 		// Finding the next tab.
-// 		else if (foundSelected) {
-// 			// Selecting the next tab.
-// 			chrome.tabs.update(window.tabs[i].id, {active: true});
-// 			return;
-// 		}
-// 	}
-// });

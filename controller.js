@@ -1,60 +1,85 @@
-const mouseSensitivityThreshold = 2;
+const tabDistFromCenterMultiplier = 20;
+const mouseSensitivityThreshold = 8;
 
-(() => {
-	if (window == top) {
-		window.addEventListener("keydown", onKeyDown);
-		window.addEventListener("keyup", onKeyUp);
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+	switch (request.command) {
+	case "hideTabs":
+		document.exitPointerLock();
+		document.removeEventListener("mousemove", updatePosition);
+
+		document.getElementById("hud").remove();
+
+		chrome.runtime.sendMessage({action: "tabCleared"});
+
+		break;
+
+	case "showTabs":
+		// create ordered list of tabs
+		const hud = document.createElement("ol");
+		hud.setAttribute("id", "hud");
+
+		request.payload.flywheel.forEach((tab, i) => {
+			// create item in list
+			const item = document.createElement("li");
+
+			// amplify coords and stringify with relevant CSS units
+			item.style.marginTop = tab.x * tabDistFromCenterMultiplier + "vw";
+			item.style.marginLeft = tab.y * tabDistFromCenterMultiplier + "vh";
+
+			// add title
+			item.appendChild(document.createTextNode(tab.title));
+			
+			// add favicon
+			const image = document.createElement("img");
+			image.src = tab.favIconUrl;
+			image.width = "32";
+			image.height = "32";
+			item.appendChild(image);
+
+			// highlight selected tab
+			if (i === request.payload.selectedTabIndex) {
+				item.classList.add("selected");
+			}
+
+			// add item to list
+			hud.appendChild(item);
+		});
+
+		// add list to doc body
+		document.body.appendChild(hud);
+
+		document.body.requestPointerLock();
+		document.addEventListener("mousemove", updatePosition);
+
+		break;
+
+	default:
+		break;
 	}
-})();
+
+	// return true;
+});
+
+if (window == top) {
+	window.addEventListener("keydown", onKeyDown);
+	window.addEventListener("keyup", onKeyUp);
+}
 
 function onKeyDown (e) {
 	if (e.key === "Alt") {
-		chrome.runtime.sendMessage({action: "keyDown"}, response => {
-			// create ordered list of tabs
-			const hud = document.createElement("ol");
-			hud.setAttribute("id", "hud");
-
-			response.payload.forEach((tab, i) => {
-				// create item in list
-				const item = document.createElement("li");
-
-				item.style.marginTop = tab.x;
-				item.style.marginLeft = tab.y;
-
-				// add title
-				item.appendChild(document.createTextNode(tab.title));
-				
-				// add favicon
-				const image = document.createElement("img");
-				image.src = tab.favIconUrl;
-				image.width = "32";
-				image.height = "32";
-				item.appendChild(image);
-
-				// add item to list
-				hud.appendChild(item);
-			});
-
-			// add list to doc body
-			document.body.appendChild(hud);
-
-			document.body.requestPointerLock();
-			document.addEventListener("mousemove", updatePosition);
-		});
+		chrome.runtime.sendMessage({action: "keyDown"});
 	}
 }
 
 function onKeyUp (e) {
 	if (e.key === "Alt") {
-		chrome.runtime.sendMessage({action: "keyUp"}, response => {
-			// console.log(response.action, response.payload);
+		// chrome.runtime.sendMessage({action: "keyUp"});
 
-			// remove list from doc body
-			document.getElementById("hud").remove();
-
-			document.exitPointerLock();
-			document.removeEventListener("mousemove", updatePosition);
-		});
+		// don't need model to tell us to clean up
+		document.exitPointerLock();
+		document.removeEventListener("mousemove", updatePosition);
+		
+		document.getElementById("hud").remove();
 	}
 }
 
@@ -64,10 +89,8 @@ function updatePosition (e) {
 		|| Math.abs(e.movementY) > mouseSensitivityThreshold
 	) {
 		chrome.runtime.sendMessage({
-			action: "mouseMove",
+			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
-		}, response => {
-			console.log(response.payload);
 		});
 	}
 }
@@ -87,4 +110,12 @@ function updatePosition (e) {
 // mouse x,y => radians
 
 // remove html before siwtching tabs
-// add to newly siwtched tab
+// then add to newly siwtched tab
+
+// fix leftover hud, leftover mouselistener, errors
+
+// normalize css
+// better styling
+
+// get pointerlock working
+// get better mousetracking
