@@ -1,5 +1,4 @@
 const tabDistFromCenterMultiplier = 20;
-const mouseSensitivityThreshold = 2;
 
 const state = {
 	keyHeld: false,
@@ -36,7 +35,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			state.flywheel.length
 		);
 
-		// switchToTabAt(selectedTabIndex);
+		switchToTabAt(selectedTabIndex);
 
 		sendResponse({
 			action: "showTabs",
@@ -94,20 +93,25 @@ function withCoords (tabList) {
 function determineSelectedTabIndex (movement, tabListLength) {
 	// movement.x: left-, right+
 	// movement.y: up-, down+
+	const radiansPerTab = (2 * Math.PI) / tabListLength;
 
-	if (Math.abs(movement.x) > mouseSensitivityThreshold || Math.abs(movement.y) > mouseSensitivityThreshold) {
-		const radiansPerTab = (2 * Math.PI) / tabListLength;
+	// swap arg order to rotate 90 degrees
+	let radiansAtMouse = Math.atan2(movement.x, -movement.y);
 
-		// swap arg order to rotate 90 degrees
-		let radiansAtMouse = Math.atan2(movement.x, -movement.y);
-
-		// convert negative radians to positive
-		if (radiansAtMouse < 0) {
-			radiansAtMouse += (2 * Math.PI);
-		}
-
-		return Math.floor(radiansAtMouse / radiansPerTab);
+	// convert negative radians to positive
+	if (radiansAtMouse < 0) {
+		radiansAtMouse += (2 * Math.PI);
 	}
+
+	return Math.floor(radiansAtMouse / radiansPerTab);
+}
+
+function switchToTabAt (index) {
+	return new Promise((resolve, reject) => {
+		chrome.windows.getLastFocused({populate: true}, window => {
+			resolve(chrome.tabs.update(window.tabs[index].id, {active: true}));
+		});
+	});
 }
 
 // chrome.windows.getLastFocused({populate: true}, window =>	{

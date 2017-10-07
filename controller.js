@@ -1,3 +1,5 @@
+const mouseSensitivityThreshold = 2;
+
 (() => {
 	if (window == top) {
 		window.addEventListener("keydown", onKeyDown);
@@ -15,6 +17,7 @@ function onKeyDown (e) {
 			response.payload.forEach((tab, i) => {
 				// create item in list
 				const item = document.createElement("li");
+
 				item.style.marginTop = tab.x;
 				item.style.marginLeft = tab.y;
 
@@ -56,12 +59,17 @@ function onKeyUp (e) {
 }
 
 function updatePosition (e) {
-	chrome.runtime.sendMessage({
-		action: "mouseMove",
-		payload: {x: e.movementX, y: e.movementY}
-	}, response => {
-		console.log(response.payload);
-	});
+	if (
+		Math.abs(e.movementX) > mouseSensitivityThreshold
+		|| Math.abs(e.movementY) > mouseSensitivityThreshold
+	) {
+		chrome.runtime.sendMessage({
+			action: "mouseMove",
+			payload: {x: e.movementX, y: e.movementY}
+		}, response => {
+			console.log(response.payload);
+		});
+	}
 }
 
 // tasks:
@@ -77,3 +85,6 @@ function updatePosition (e) {
 
 // list => radians => x,y
 // mouse x,y => radians
+
+// remove html before siwtching tabs
+// add to newly siwtched tab
