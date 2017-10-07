@@ -10,12 +10,20 @@ function onKeyDown (e) {
 		chrome.runtime.sendMessage({action: "keyDown"}, response => {
 			console.log(response.payload);
 
-			const hud = document.createElement("ul");
+			const hud = document.createElement("ol");
 			hud.setAttribute("id", "hud");
 
 			response.payload.tabs.forEach(tab => {
-				const item = document.createElement('li');
+				const item = document.createElement("li");
+
 				item.appendChild(document.createTextNode(tab.title));
+				
+				const image = document.createElement("img");
+				image.src = tab.favIconUrl;
+				image.width = "32";
+				image.height = "32";
+				item.appendChild(image);
+
 				hud.appendChild(item);
 			});
 
@@ -47,3 +55,14 @@ function updatePosition(e) {
 		console.log('x <= y')
 	}
 }
+
+// tasks:
+// render favicon under text
+// make circle of tabs
+// mark current tab
+
+// switch to new tab on movement
+// map movement to degree
+// switch to tab if within certain degree
+
+// placeholder favicon
