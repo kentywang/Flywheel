@@ -1,3 +1,5 @@
+const tabDistFromCenterMultiplier = 20;
+
 const state = {
 	keyHeld: false
 };
@@ -25,8 +27,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		state.keyHeld = true;
 
 		getTabList().then(tabList => {
-			flywheel.tabs = tabList;
-			
+			flywheel.tabs = addCoords(tabList);
+			console.log(flywheel)
 			sendResponse({action: state.keyHeld, payload: flywheel});
 		});
 
@@ -47,6 +49,30 @@ function getTabList () {
 		});
 	});
 }
+
+function addCoords(tabList) {
+	return tabList.map((tab, i) => {
+		const tabWithCoords = Object.assign({}, tab);
+
+		// calculate where item will fall on ring menu in radians
+		const radians = i * 2 * Math.PI / tabList.length;
+
+		// get cartesian coords from radians
+		tabWithCoords.x = Math.cos(radians);
+		tabWithCoords.y = Math.sin(radians);
+
+		// amplify coordinates
+		tabWithCoords.x *= tabDistFromCenterMultiplier;
+		tabWithCoords.y *= tabDistFromCenterMultiplier;
+
+		// stringify with relevant CSS units
+		tabWithCoords.x += "vw";
+		tabWithCoords.y += "vh";
+
+		return tabWithCoords;
+	});
+}
+
 
 // chrome.windows.getLastFocused({populate: true}, window =>	{
 // 	var foundSelected = false;

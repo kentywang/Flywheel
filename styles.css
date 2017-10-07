@@ -5,6 +5,6 @@
 	transform: translate(-50%, -50%);
 }
 
-#hud.hidden {
-	display: none;
+#hud > li {
+	position: absolute;
 }
