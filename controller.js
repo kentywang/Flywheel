@@ -69,13 +69,15 @@ if (window == top) {
 }
 
 function onKeyDown (e) {
-	// if (e.key === "Alt") {
-	document.body.requestPointerLock();
-	// }
+	if (e.key) {
+		console.log('altkeydown')
+		document.body.requestPointerLock();
+	}
 }
 
 function onKeyUp (e) {
-	if (e.key === "Alt") {
+	if (e.key) {
+		console.log('altkeyup')
 		// don't need model to tell us to clean up
 		document.getElementById("hud").remove();
 		
