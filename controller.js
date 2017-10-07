@@ -1,78 +1,25 @@
 const tabDistFromCenterMultiplier = 20;
 const mouseSensitivityThreshold = 8;
 
-// document.addEventListener("pointerlockchange", pointerLockChanged);
-
 if (window == top) {
 	console.log('windowTop')
 	window.addEventListener("keydown", onKeyDown);
 	window.addEventListener("keyup", onKeyUp);
 }
 
-// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-// 	switch (request.command) {
-// 	case "hideTabs":
-// 		console.log('hideTabs')
-// 		// clean up listeners and HTML injection on current tab
-// 		document.getElementById("hud").remove();
-		
-// 		new Promise((resolve, reject) => {
-// 			resolve(document.exitPointerLock());
-// 		}).then(() => {
-// 			console.log('exitedPointerLock')
-// 			chrome.runtime.sendMessage({action: "tabCleared"});
-// 		});
-
-// 		break;
-
-// 	case "showTabs":
-// 		console.log('showTabs')
-// 		if (document.getElementById("hud")) {
-// 			return
-// 		}
-
-// 		addToPage(request.payload.flywheel);                   
-
-// 		document.body.requestPointerLock();
-// 		break;
-
-// 	default:
-// 		break;
-// 	}
-// });
-
-
 function onKeyDown (e) {
 	if (e.key === "Alt") {
 		chrome.runtime.sendMessage({action: "keyDown"}, response => {
 			addToPage(response.payload);
-			// document.body.requestPointerLock();
-			document.addEventListener("mousemove", updatePosition);
 		});
 	}
 }
 
 function onKeyUp (e) {
 	if (e.key === "Alt") {
-		// console.log('altkeyup')
-		// don't need model to tell us to clean up
-		document.getElementById("hud").remove();
-
-		document.removeEventListener("mousemove", updatePosition);
-
-		// document.exitPointerLock();
+		cleanUp();
 	}
 }
-
-// function pointerLockChanged () {
-// 	// console.log('pointer status:', document.pointerLockElement)
-// 	if (document.pointerLockElement) {
-// 		// chrome.runtime.sendMessage({action: "pointerLocked"});
-// 		document.addEventListener("mousemove", updatePosition);
-// 	} else {
-// 		document.removeEventListener("mousemove", updatePosition);
-// 	}
-// }
 
 function updatePosition (e) {
 	if (
@@ -83,6 +30,12 @@ function updatePosition (e) {
 		chrome.runtime.sendMessage({
 			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
+		}, response => {
+			cleanUp();
+
+			chrome.runtime.sendMessage({action: "cleaned"}, response => {
+				addToPage(response.payload);
+			});
 		});
 	}
 }
@@ -121,6 +74,13 @@ function addToPage ({flywheel, selectedTabIndex}) {
 
 	// add list to doc body
 	document.body.appendChild(hud); 
+
+	document.addEventListener("mousemove", updatePosition);
+}
+
+function cleanUp () {
+	document.getElementById("hud").remove();
+	document.removeEventListener("mousemove", updatePosition);
 }
 
 // tasks:

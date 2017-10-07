@@ -28,24 +28,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		console.log('mouseMoved')
 
 		// if (!isCurrentTab(state.selectedTabIndex)) {
-			// sendResponse({command: "hideTabs"});
+			sendResponse({command: "hideTabs"});
 		// }
-		switchToTabAt(state.selectedTabIndex);
 
 		break;
 
-	// case "tabCleared":
-	// 	console.log('tabCleared')
-	// 	switchToTabAt(state.selectedTabIndex).then(() => {
-	// 		chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-	// 			sendResponse({
-	// 				command: "showTabs",
-	// 				payload: state
-	// 			});
-	// 		});
-	// 	});
+	case "cleaned":
+		console.log('cleaned')
+		switchToTabAt(state.selectedTabIndex).then(() => {
+			sendResponse({
+				command: "showTabs",
+				payload: state
+			});
+		});
 
-	// 	break;
+		break;
 
 	default:
 		break;
