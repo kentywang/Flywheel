@@ -5,50 +5,47 @@ const state = {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.action) {
-	case "pointerLocked":
-		console.log('pointerLocked')
+	case "keyDown":
+		console.log('keyDown')
 		Promise.all([getTabList(), getActiveTab()]).then(([tabList, selectedTabIndex]) => {
 			// only time we update the internal list of tabs is here
 			state.flywheel = withCoords(tabList);
 			state.selectedTabIndex = selectedTabIndex;
 
-			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-				chrome.tabs.sendMessage(tabs[0].id, {
-					command: "showTabs",
-					payload: state
-				});
+			sendResponse({
+				command: "showTabs",
+				payload: state
 			});
 		});
 
 		break;
 
 	case "mouseMoved":
-		console.log('mouseMoved')
 		state.selectedTabIndex = determineSelectedTabIndex(
 			request.payload,
 			state.flywheel.length
 		);
+		console.log('mouseMoved')
 
 		// if (!isCurrentTab(state.selectedTabIndex)) {
-			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-				chrome.tabs.sendMessage(tabs[0].id, {command: "hideTabs"});
-			});
+			// sendResponse({command: "hideTabs"});
 		// }
+		switchToTabAt(state.selectedTabIndex);
 
 		break;
 
-	case "tabCleared":
-		console.log('tabCleared')
-		switchToTabAt(state.selectedTabIndex).then(() => {
-			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-				chrome.tabs.sendMessage(tabs[0].id, {
-					command: "showTabs",
-					payload: state
-				});
-			});
-		});
+	// case "tabCleared":
+	// 	console.log('tabCleared')
+	// 	switchToTabAt(state.selectedTabIndex).then(() => {
+	// 		chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+	// 			sendResponse({
+	// 				command: "showTabs",
+	// 				payload: state
+	// 			});
+	// 		});
+	// 	});
 
-		break;
+	// 	break;
 
 	default:
 		break;
