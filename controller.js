@@ -4,16 +4,21 @@ const mouseSensitivityThreshold = 8;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.command) {
 	case "hideTabs":
-		document.exitPointerLock();
-		document.removeEventListener("mousemove", updatePosition);
-
+		console.log('hideTabs')
+		// clean up listeners and HTML injection on current tab
 		document.getElementById("hud").remove();
-
-		chrome.runtime.sendMessage({action: "tabCleared"});
+		
+		new Promise((resolve, reject) => {
+			resolve(document.exitPointerLock());
+		}).then(() => {
+			console.log('exitedPointerLock')
+			chrome.runtime.sendMessage({action: "tabCleared"});
+		});
 
 		break;
 
 	case "showTabs":
+		console.log('showTabs')
 		// create ordered list of tabs
 		const hud = document.createElement("ol");
 		hud.setAttribute("id", "hud");
@@ -24,7 +29,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 			// amplify coords and stringify with relevant CSS units
 			item.style.marginTop = tab.x * tabDistFromCenterMultiplier + "vw";
-			item.style.marginLeft = tab.y * tabDistFromCenterMultiplier + "vh";
+			item.style.marginLeft = tab.y * tabDistFromCenterMultiplier + "vw";
 
 			// add title
 			item.appendChild(document.createTextNode(tab.title));
@@ -46,40 +51,45 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		});
 
 		// add list to doc body
-		document.body.appendChild(hud);
-
-		document.body.requestPointerLock();
-		document.addEventListener("mousemove", updatePosition);
+		document.body.appendChild(hud);                    
 
 		break;
 
 	default:
 		break;
 	}
-
-	// return true;
 });
 
+document.addEventListener("pointerlockchange", pointerLockChanged);
+
 if (window == top) {
+	console.log('windowTop')
 	window.addEventListener("keydown", onKeyDown);
 	window.addEventListener("keyup", onKeyUp);
 }
 
 function onKeyDown (e) {
-	if (e.key === "Alt") {
-		chrome.runtime.sendMessage({action: "keyDown"});
-	}
+	// if (e.key === "Alt") {
+	document.body.requestPointerLock();
+	// }
 }
 
 function onKeyUp (e) {
 	if (e.key === "Alt") {
-		// chrome.runtime.sendMessage({action: "keyUp"});
-
 		// don't need model to tell us to clean up
-		document.exitPointerLock();
-		document.removeEventListener("mousemove", updatePosition);
-		
 		document.getElementById("hud").remove();
+		
+		document.exitPointerLock();
+	}
+}
+
+function pointerLockChanged () {
+	console.log('pointer status:', document.pointerLockElement)
+	if (document.pointerLockElement) {
+		chrome.runtime.sendMessage({action: "pointerLocked"});
+		document.addEventListener("mousemove", updatePosition);
+	} else {
+		document.removeEventListener("mousemove", updatePosition);
 	}
 }
 
@@ -114,8 +124,12 @@ function updatePosition (e) {
 
 // fix leftover hud, leftover mouselistener, errors
 
+// elliptical ring?
+
 // normalize css
 // better styling
 
 // get pointerlock working
 // get better mousetracking
+
+// handle multiple windows

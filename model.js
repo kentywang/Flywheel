@@ -1,29 +1,16 @@
 const state = {
-	// keyHeld: false,
 	flywheel: [],
 	selectedTabIndex: null
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.action) {
-	// case "keyUp":
-	// 	state.keyHeld = false;
-
-	// 	chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-	// 		chrome.tabs.sendMessage(tabs[0].id, {
-	// 			command: "showKeyState",
-	// 			payload: state.keyHeld
-	// 		});
-	// 	});
-
-	// 	break;
-
-	case "keyDown":
-		// state.keyHeld = true;
-
-		getTabList().then(tabList => {
+	case "pointerLocked":
+		console.log('pointerLocked')
+		Promise.all([getTabList(), getActiveTab()]).then(([tabList, selectedTabIndex]) => {
 			// only time we update the internal list of tabs is here
 			state.flywheel = withCoords(tabList);
+			state.selectedTabIndex = selectedTabIndex;
 
 			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
 				chrome.tabs.sendMessage(tabs[0].id, {
@@ -36,6 +23,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		break;
 
 	case "mouseMoved":
+		console.log('mouseMoved')
 		state.selectedTabIndex = determineSelectedTabIndex(
 			request.payload,
 			state.flywheel.length
@@ -50,6 +38,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		break;
 
 	case "tabCleared":
+		console.log('tabCleared')
 		switchToTabAt(state.selectedTabIndex).then(() => {
 			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
 				chrome.tabs.sendMessage(tabs[0].id, {
@@ -76,6 +65,14 @@ function getTabList () {
 				title: tab.title,
 				favIconUrl: tab.favIconUrl
 			})));
+		});
+	});
+}
+
+function getActiveTab () {
+	return new Promise((resolve, reject) => {
+		chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+			resolve(tabs[0].index);
 		});
 	});
 }
