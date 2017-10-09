@@ -88,6 +88,7 @@ function cleanUp () {
 	document.removeEventListener("mousemove", updatePosition);
 	document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
 	canAddHud = true;
+	// promisify this?
 }
 
 if (window == top) {
