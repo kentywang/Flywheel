@@ -1,9 +1,10 @@
 const tabDistFromCenterMultiplier = 20;
-const mouseSensitivityThreshold = 8;
+const mouseSensitivityThreshold = 5;
 
 let canAddHud = true;
 
 function onKeyDown (e) {
+	console.log('KEYDOWN')
 	if (e.key === "Alt") {
 		chrome.runtime.sendMessage({action: "keyDown"}, response => {
 			console.log('addtopage from keydown resp')
@@ -13,6 +14,7 @@ function onKeyDown (e) {
 }
 
 function onKeyUp (e) {
+	console.log('KEYUP')
 	if (e.key === "Alt") {
 		// console.log('cleanup from keyup')
 		cleanUp();
@@ -37,6 +39,7 @@ function updatePosition (e) {
 function addToPage ({flywheel, selectedTabIndex}) {
 	if (canAddHud) {
 		canAddHud = false;
+
 		// create ordered list of tabs
 		const hud = document.createElement("ol");
 		hud.setAttribute("id", "hud");
@@ -73,6 +76,8 @@ function addToPage ({flywheel, selectedTabIndex}) {
 
 		document.addEventListener("mousemove", updatePosition);
 		document.addEventListener("webkitvisibilitychange", handleVisibilityChange);
+
+		window.addEventListener("keyup", onKeyUp);
 	}
 }
 
@@ -87,19 +92,24 @@ function cleanUp () {
 	document.getElementById("hud").remove();
 	document.removeEventListener("mousemove", updatePosition);
 	document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
+
+	window.removeEventListener("keyup", onKeyUp);
+
 	canAddHud = true;
 	// promisify this?
+
+
 }
 
-if (window == top) {
+// if (window == top) {
 	// console.log('windowTop')
 	window.addEventListener("keydown", onKeyDown);
-	window.addEventListener("keyup", onKeyUp);
-}
+	// window.addEventListener("keyup", onKeyUp);
+// }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.command) {
-	case "showTabs":
+	case "showHud":
 		console.log('addtopage from updatepos resp')
 		addToPage(request.payload);
 
@@ -135,6 +145,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // I think I solved the lefthover hud issue (not the most elegant solution,
 // using state instaed of figuring out root)
 
-// now I gotta unsticky the hud when switching to new tab and keyup
-// at the same time
-// actualyy nope, doesn't just happen when keyupping
+// sticky hud, unsticks after keydown and keyup
+// (my guess is keyup not being detected)
+
+// page sometimes not detecting any key events until mouseclick
+// think it's cuz focus is on console
+// window focus doesn't seem to work
+
+// radial distance from first hold

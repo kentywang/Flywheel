@@ -21,7 +21,8 @@
     {
       "matches": ["http://*/*", "https://*/*"],
       "js": ["controller.js"],
-      "css": ["styles.css"]
+      "css": ["styles.css"],
+      "run_at": "document_start"
     }
   ]
 }
