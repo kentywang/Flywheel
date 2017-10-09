@@ -37,8 +37,11 @@ function updatePosition (e) {
 function addToPage ({flywheel, selectedTabIndex}) {
 	if (canAddHud) {
 		// create ordered list of tabs
-		const hud = document.createElement("ol");
+		const hud = document.createElement("div");
 		hud.setAttribute("id", "hud");
+
+		const ring = document.createElement("ol")
+		hud.appendChild(ring);
 
 		flywheel.forEach((tab, i) => {
 			// create item in list
@@ -64,7 +67,7 @@ function addToPage ({flywheel, selectedTabIndex}) {
 			}
 
 			// add item to list
-			hud.appendChild(item);
+			ring.appendChild(item);
 		});
 
 		// add list to doc body
