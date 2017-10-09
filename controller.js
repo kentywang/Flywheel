@@ -4,42 +4,38 @@ const mouseSensitivityThreshold = 5;
 let canAddHud = true;
 
 function onKeyDown (e) {
-	console.log('KEYDOWN')
+	// console.log('KEYDOWN')
 	if (e.key === "Alt") {
 		chrome.runtime.sendMessage({action: "keyDown"}, response => {
-			console.log('addtopage from keydown resp')
+			// console.log('addtopage from keydown resp')
 			addToPage(response.payload);
 		});
 	}
 }
 
 function onKeyUp (e) {
-	console.log('KEYUP')
+	// console.log('KEYUP')
 	if (e.key === "Alt") {
-		// console.log('cleanup from keyup')
+		console.log('cleanup from keyup')
 		cleanUp();
 	}
 }
 
 function updatePosition (e) {
-	if (
-		Math.hypot(e.movementX, e.movementY) > mouseSensitivityThreshold
-		// && document.getElementById("hud")
-	) {
+	if (!e.altKey && !canAddHud) {
+		// this is a bandage solution to problem with the rare keyup being lost 
+		// in between tab switches
+		cleanUp();
+	} else if (Math.hypot(e.movementX, e.movementY) > mouseSensitivityThreshold) {
 		chrome.runtime.sendMessage({
 			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
-		}, response => {
-			// console.log('cleanup from updatepos resp', Date.now())
-			// cleanUp();
 		});
 	}
 }
 
 function addToPage ({flywheel, selectedTabIndex}) {
 	if (canAddHud) {
-		canAddHud = false;
-
 		// create ordered list of tabs
 		const hud = document.createElement("ol");
 		hud.setAttribute("id", "hud");
@@ -78,39 +74,37 @@ function addToPage ({flywheel, selectedTabIndex}) {
 		document.addEventListener("webkitvisibilitychange", handleVisibilityChange);
 
 		window.addEventListener("keyup", onKeyUp);
+		
+		canAddHud = false;
 	}
 }
 
 function handleVisibilityChange() {
 	if (document.webkitHidden) {
+		console.log('cleanup from tabhide')
 		cleanUp();
 	}
 }
 
 function cleanUp () {
-	console.log('cleaning')
 	document.getElementById("hud").remove();
 	document.removeEventListener("mousemove", updatePosition);
 	document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
 
 	window.removeEventListener("keyup", onKeyUp);
 
-	canAddHud = true;
 	// promisify this?
-
-
+	canAddHud = true;
 }
 
 // if (window == top) {
-	// console.log('windowTop')
 	window.addEventListener("keydown", onKeyDown);
-	// window.addEventListener("keyup", onKeyUp);
 // }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.command) {
 	case "showHud":
-		console.log('addtopage from updatepos resp')
+		// console.log('addtopage from updatepos resp')
 		addToPage(request.payload);
 
 		break;

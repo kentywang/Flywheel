@@ -83,7 +83,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 			// console.log(state)
 
-
 			sendResponse({
 				command: "showTabs",
 				payload: state
