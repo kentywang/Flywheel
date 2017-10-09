@@ -3,6 +3,60 @@ const state = {
 	selectedTabIndex: null
 };
 
+function getTabList () {
+	return new Promise((resolve, reject) => {
+		chrome.windows.getLastFocused({populate: true}, window => {
+			resolve(window.tabs);
+		});
+	});
+}
+
+function switchToTabAt (tabList, index) {
+	return new Promise((resolve, reject) => {
+		chrome.tabs.update(tabList[index].id, {active: true}, tab => {
+			resolve(tab);
+		});
+	});
+}
+
+// returns argument list of tabs with coords added
+function withCoords (tabList) {
+	return tabList.map((tab, i) => {
+		const tabWithCoords = Object.assign({}, tab);
+
+		// calculate where item will fall on ring menu in radians
+		let radiansAtTab = (tabList.length - i) * (2 * Math.PI) / tabList.length;
+
+		// rotate 180 degrees to put first item on top
+		radiansAtTab -= Math.PI;
+
+		// get cartesian coords from radians
+		tabWithCoords.x = Math.cos(radiansAtTab);
+		tabWithCoords.y = Math.sin(radiansAtTab);
+
+		return tabWithCoords;
+	});
+}
+
+function determineSelectedTabIndex (movement, tabListLength) {
+	// movement.x: left-, right+
+	// movement.y: up-, down+
+	const radiansPerTab = (2 * Math.PI) / tabListLength;
+	const offset = radiansPerTab / 2;
+
+	// swap arg order to rotate 90 degrees
+	let radiansAtMouse = Math.atan2(movement.x, -movement.y);
+
+	// convert negative radians to positive
+	if (radiansAtMouse < 0) {
+		radiansAtMouse += (2 * Math.PI);
+	}
+
+	// console.log(radiansAtMouse, Math.floor(radiansAtMouse / radiansPerTab))
+
+	return Math.floor((radiansAtMouse + offset) / radiansPerTab);
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.action) {
 	case "keyDown":
@@ -90,57 +144,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	// need this to send async response
 	return true;
 });
-
-// returns argument list of tabs with coords added
-function withCoords (tabList) {
-	return tabList.map((tab, i) => {
-		const tabWithCoords = Object.assign({}, tab);
-
-		// calculate where item will fall on ring menu in radians
-		let radiansAtTab = (tabList.length - i) * (2 * Math.PI) / tabList.length;
-
-		// rotate 180 degrees to put first item on top
-		radiansAtTab -= Math.PI;
-
-		// get cartesian coords from radians
-		tabWithCoords.x = Math.cos(radiansAtTab);
-		tabWithCoords.y = Math.sin(radiansAtTab);
-
-		return tabWithCoords;
-	});
-}
-
-function determineSelectedTabIndex (movement, tabListLength) {
-	// movement.x: left-, right+
-	// movement.y: up-, down+
-	const radiansPerTab = (2 * Math.PI) / tabListLength;
-	const offset = radiansPerTab / 2;
-
-	// swap arg order to rotate 90 degrees
-	let radiansAtMouse = Math.atan2(movement.x, -movement.y);
-
-	// convert negative radians to positive
-	if (radiansAtMouse < 0) {
-		radiansAtMouse += (2 * Math.PI);
-	}
-
-	// console.log(radiansAtMouse, Math.floor(radiansAtMouse / radiansPerTab))
-
-	return Math.floor((radiansAtMouse + offset)/ radiansPerTab);
-}
-
-function getTabList () {
-	return new Promise((resolve, reject) => {
-		chrome.windows.getLastFocused({populate: true}, window => {
-			resolve(window.tabs);
-		});
-	});
-}
-
-function switchToTabAt (tabList, index) {
-	return new Promise((resolve, reject) => {
-		chrome.tabs.update(tabList[index].id, {active: true}, tab => {
-			resolve(tab);
-		});
-	});
-}
