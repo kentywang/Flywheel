@@ -120,14 +120,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // placeholder favicon
 
-// fix leftover hud
-// leftover mouselistener [DONE?]
+// fix leftover hud [DONE]
+// leftover mouselistener [DONE]
 // errors
 
 // normalize css
 // better styling
 
-// get pointerlock working
+// get pointerlock working [DONE]
 // get better mousetracking
 
 // handle multiple windows
