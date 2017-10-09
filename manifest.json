@@ -24,5 +24,14 @@
       "css": ["styles.css"],
       "run_at": "document_start"
     }
-  ]
+  ],
+  "commands": {
+    "show_flywheel": {
+      "suggested_key": {
+        "default": "Alt+Z",
+        "mac": "Alt+Z"
+      },
+      "description": "Show flywheel"
+    }
+  }
 }

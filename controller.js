@@ -3,36 +3,16 @@ const mouseSensitivityThreshold = 5;
 
 let canAddHud = true;
 
-function onKeyDown (e) {
-	console.log('KEYDOWN')
-	if (e.key === "Alt") {
-		chrome.runtime.sendMessage({action: "keyDown"}, response => {
-			console.log('addtopage from keydown resp')
-			addToPage(response.payload);
-		});
-	}
-}
-
-function onKeyUp (e) {
-	console.log('KEYUP')
-	if (e.key === "Alt") {
-		// console.log('cleanup from keyup')
-		cleanUp();
-	}
-}
-
 function updatePosition (e) {
-	if (
-		Math.hypot(e.movementX, e.movementY) > mouseSensitivityThreshold
-		// && document.getElementById("hud")
-	) {
-		chrome.runtime.sendMessage({
-			action: "mouseMoved",
-			payload: {x: e.movementX, y: e.movementY}
-		}, response => {
-			// console.log('cleanup from updatepos resp', Date.now())
-			// cleanUp();
-		});
+	if (Math.hypot(e.movementX, e.movementY) > mouseSensitivityThreshold) {
+		if (e.altKey) { // this...
+			chrome.runtime.sendMessage({
+				action: "mouseMoved",
+				payload: {x: e.movementX, y: e.movementY}
+			});
+		} else {
+			cleanUp(); // ...and this kinda mitigate sticky hud issue, but only after user moves mouse
+		}
 	}
 }
 
@@ -76,8 +56,6 @@ function addToPage ({flywheel, selectedTabIndex}) {
 
 		document.addEventListener("mousemove", updatePosition);
 		document.addEventListener("webkitvisibilitychange", handleVisibilityChange);
-
-		window.addEventListener("keyup", onKeyUp);
 	}
 }
 
@@ -88,30 +66,25 @@ function handleVisibilityChange() {
 }
 
 function cleanUp () {
-	console.log('cleaning')
+	// console.log('cleaning')
 	document.getElementById("hud").remove();
 	document.removeEventListener("mousemove", updatePosition);
 	document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
 
-	window.removeEventListener("keyup", onKeyUp);
-
 	canAddHud = true;
 	// promisify this?
-
-
 }
-
-// if (window == top) {
-	// console.log('windowTop')
-	window.addEventListener("keydown", onKeyDown);
-	// window.addEventListener("keyup", onKeyUp);
-// }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.command) {
 	case "showHud":
 		console.log('addtopage from updatepos resp')
 		addToPage(request.payload);
+
+		break;
+	case "clearHud":
+		console.log('cleanhud')
+		cleanUp();
 
 		break;
 	default:
@@ -147,6 +120,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // sticky hud, unsticks after keydown and keyup
 // (my guess is keyup not being detected)
+
+// need state for keyheld?
 
 // page sometimes not detecting any key events until mouseclick
 // think it's cuz focus is on console

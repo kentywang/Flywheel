@@ -3,6 +3,12 @@ const state = {
 	selectedTabIndex: null
 };
 
+const internalState = {
+	hudOpen: false,
+	timer: null,
+	pollFrequency: 250
+}; 
+
 function getTabList () {
 	return new Promise((resolve, reject) => {
 		chrome.windows.getLastFocused({populate: true}, window => {
@@ -57,89 +63,108 @@ function determineSelectedTabIndex (movement, tabListLength) {
 	return Math.floor((radiansAtMouse + offset) / radiansPerTab);
 }
 
+function resetTimer () {
+	clearTimeout(internalState.timer);
+
+	internalState.timer = setTimeout(() => {
+		chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+			chrome.tabs.sendMessage(tabs[0].id, {
+				command: "clearHud"
+			});
+
+			internalState.hudOpen = false;
+		});
+	}, internalState.pollFrequency);
+}
+
+chrome.commands.onCommand.addListener(command => {
+	if (internalState.hudOpen) {
+		resetTimer();
+		return;
+	}
+
+	console.log('Command:', command, internalState.hudOpen);
+
+	getTabList()
+	.then(tabList => {
+		// store culled property list with coords
+		state.flywheel = withCoords(tabList.map(({
+			title,
+			favIconUrl,
+			id,
+			active
+		}) => ({
+			title,
+			favIconUrl,
+			id,
+			active
+		})));
+
+		// store index of active tab
+		state.selectedTabIndex = state.flywheel.findIndex(tab => (
+			tab.active
+		));
+
+		// pass flywheel to active tab
+		chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+			chrome.tabs.sendMessage(tabs[0].id, {
+				command: "showHud",
+				payload: state
+			});
+
+			// set a timer that keeps getting reset if command keys are pressed
+			// if timer runs out, hide hud
+			internalState.hudOpen = true;
+			resetTimer();
+		});
+	});
+});
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-	switch (request.action) {
-	case "keyDown":
-		// console.log('keyDown')
-		getTabList()
-		.then(tabList => {
-			// store culled property list with coords
-			state.flywheel = withCoords(tabList.map(({
-				title,
-				favIconUrl,
-				id,
-				active
-			}) => ({
-				title,
-				favIconUrl,
-				id,
-				active
-			})));
+	state.selectedTabIndex = determineSelectedTabIndex(
+		request.payload,
+		state.flywheel.length
+	);
 
-			// store index of active tab
-			state.selectedTabIndex = state.flywheel.findIndex(tab => (
-				tab.active
-			));
+	getTabList()
+	.then(tabList => {
+		// update tabList again since active tab may have changed
+		state.flywheel = withCoords(tabList.map(({
+			title,
+			favIconUrl,
+			id,
+			active
+		}) => ({
+			title,
+			favIconUrl,
+			id,
+			active
+		})));
 
-			// console.log(state)
-
-
-			sendResponse({
-				command: "showTabs",
+		// check if the newly selected tab is different from active tab
+		if (!state.flywheel[state.selectedTabIndex].active) {
+			// console.log(`from ${sender.url} send cleanup, switch to`, state.selectedTabIndex, Date.now())
+			// sendResponse({command: "cleanUp"});
+			return switchToTabAt(tabList, state.selectedTabIndex);
+		} else {
+			throw "Same tab selected.";
+		}
+	})
+	.then(tab => {
+		// pass state to newly activated tab
+		chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+			chrome.tabs.sendMessage(tabs[0].id, {
+				command: "showHud",
 				payload: state
 			});
 		});
-
-		break;
-	case "mouseMoved":
-		state.selectedTabIndex = determineSelectedTabIndex(
-			request.payload,
-			state.flywheel.length
-		);
-
-		getTabList()
-		.then(tabList => {
-			// update tabList again since active tab may have changed
-			state.flywheel = withCoords(tabList.map(({
-				title,
-				favIconUrl,
-				id,
-				active
-			}) => ({
-				title,
-				favIconUrl,
-				id,
-				active
-			})));
-
-			// check if the newly selected tab is different from active tab
-			if (!state.flywheel[state.selectedTabIndex].active) {
-				// console.log(`from ${sender.url} send cleanup, switch to`, state.selectedTabIndex, Date.now())
-				// sendResponse({command: "cleanUp"});
-				return switchToTabAt(tabList, state.selectedTabIndex);
-			} else {
-				throw "Same tab selected.";
-			}
-		})
-		.then(tab => {
-			// pass state to newly activated tab
-			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-				chrome.tabs.sendMessage(tabs[0].id, {
-					command: "showHud",
-					payload: state
-				});
-			});
-			// maybe I can start preloading the flywheel to the new active tab
-			// before it is switched to
-		})
-		.catch(error => {
-			// console.log(error);
-		});
-
-		break;
-	default:
-		break;
-	}
+		console.log('showhud')
+		// maybe I can start preloading the flywheel to the new active tab
+		// before it is switched to
+	})
+	.catch(error => {
+		// console.log(error);
+	});
 
 	// need this to send async response
 	return true;
