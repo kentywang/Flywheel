@@ -2,7 +2,7 @@ const tabDistFromCenterMultiplier = 20;
 const mouseSensitivityThreshold = 8;
 
 if (window == top) {
-	console.log('windowTop')
+	// console.log('windowTop')
 	window.addEventListener("keydown", onKeyDown);
 	window.addEventListener("keyup", onKeyUp);
 }
@@ -30,7 +30,7 @@ function onKeyDown (e) {
 
 function onKeyUp (e) {
 	if (e.key === "Alt") {
-		console.log('cleanup from keyup')
+		// console.log('cleanup from keyup')
 		cleanUp();
 	}
 }
@@ -44,9 +44,8 @@ function updatePosition (e) {
 			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
 		}, response => {
-			console.log('cleanup from updatepos resp', Date.now())
-			cleanUp();
-			// chrome.runtime.sendMessage({action: "cleaned"});
+			// console.log('cleanup from updatepos resp', Date.now())
+			// cleanUp();
 		});
 	}
 }
@@ -87,18 +86,29 @@ function addToPage ({flywheel, selectedTabIndex}) {
 	document.body.appendChild(hud); 
 
 	document.addEventListener("mousemove", updatePosition);
+
+	document.addEventListener("webkitvisibilitychange", handleVisibilityChange);
 }
 
 function cleanUp () {
+	console.log('cleaning')
 	document.getElementById("hud").remove();
 	document.removeEventListener("mousemove", updatePosition);
+	document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
 }
 
+function handleVisibilityChange() {
+	if (document.webkitHidden) {
+		cleanUp();
+	}
+}
 // tasks:
 
 // placeholder favicon
 
-// fix leftover hud, leftover mouselistener, errors
+// fix leftover hud
+// leftover mouselistener [DONE?]
+// errors
 
 // normalize css
 // better styling
@@ -110,7 +120,9 @@ function cleanUp () {
 
 // namespace #hud
 
-// I figured out controller js is like an instance of a tab, so when I think
-// I'm adding the active tab to the newly switched page, I be wrong
+// switching to incorrect tabs on input
+// reason: divvying up sections wrong.
 
-// now I gotta figure out why cleanup isn't finishing to completion all the time
+70 30
+
+// visibility api may be my key to pointerlock?

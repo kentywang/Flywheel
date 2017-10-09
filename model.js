@@ -60,8 +60,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 			// check if the newly selected tab is different from active tab
 			if (!state.flywheel[state.selectedTabIndex].active) {
-				console.log(`from ${sender.url} send cleanup, switch to`, state.selectedTabIndex, Date.now())
-				sendResponse({command: "cleanUp"});
+				// console.log(`from ${sender.url} send cleanup, switch to`, state.selectedTabIndex, Date.now())
+				// sendResponse({command: "cleanUp"});
 				return switchToTabAt(tabList, state.selectedTabIndex);
 			} else {
 				throw "Same tab selected.";
@@ -78,7 +78,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			// maybe I can start preloading the flywheel to the new active tab
 			// before it is switched to
 		})
-		.catch(error => console.log(error));
+		.catch(error => {
+			// console.log(error);
+		});
 
 		break;
 	default:
@@ -112,6 +114,7 @@ function determineSelectedTabIndex (movement, tabListLength) {
 	// movement.x: left-, right+
 	// movement.y: up-, down+
 	const radiansPerTab = (2 * Math.PI) / tabListLength;
+	const offset = radiansPerTab / 2;
 
 	// swap arg order to rotate 90 degrees
 	let radiansAtMouse = Math.atan2(movement.x, -movement.y);
@@ -121,7 +124,9 @@ function determineSelectedTabIndex (movement, tabListLength) {
 		radiansAtMouse += (2 * Math.PI);
 	}
 
-	return Math.floor(radiansAtMouse / radiansPerTab);
+	// console.log(radiansAtMouse, Math.floor(radiansAtMouse / radiansPerTab))
+
+	return Math.floor((radiansAtMouse + offset)/ radiansPerTab);
 }
 
 function getTabList () {
