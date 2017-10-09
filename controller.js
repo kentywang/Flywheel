@@ -10,11 +10,10 @@ if (window == top) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.command) {
 	case "showTabs":
-		console.log('showtabs')
+		console.log('addtopage from updatepos resp')
 		addToPage(request.payload);
 
 		break;
-
 	default:
 		break;
 	}
@@ -22,8 +21,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 function onKeyDown (e) {
 	if (e.key === "Alt") {
-		console.log('keydown')
 		chrome.runtime.sendMessage({action: "keyDown"}, response => {
+			console.log('addtopage from keyup resp')
 			addToPage(response.payload);
 		});
 	}
@@ -31,6 +30,7 @@ function onKeyDown (e) {
 
 function onKeyUp (e) {
 	if (e.key === "Alt") {
+		console.log('cleanup from keyup')
 		cleanUp();
 	}
 }
@@ -40,11 +40,11 @@ function updatePosition (e) {
 		Math.hypot(e.movementX, e.movementY) > mouseSensitivityThreshold
 		// && document.getElementById("hud")
 	) {
-		console.log('firingMouseMoved')
 		chrome.runtime.sendMessage({
 			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
 		}, response => {
+			console.log('cleanup from updatepos resp', Date.now())
 			cleanUp();
 			// chrome.runtime.sendMessage({action: "cleaned"});
 		});
@@ -52,7 +52,6 @@ function updatePosition (e) {
 }
 
 function addToPage ({flywheel, selectedTabIndex}) {
-	console.log('adding')
 	// create ordered list of tabs
 	const hud = document.createElement("ol");
 	hud.setAttribute("id", "hud");
@@ -93,29 +92,13 @@ function addToPage ({flywheel, selectedTabIndex}) {
 function cleanUp () {
 	document.getElementById("hud").remove();
 	document.removeEventListener("mousemove", updatePosition);
-	console.log('cleaned up')
 }
 
 // tasks:
-// render favicon under text
-// make circle of tabs
-// mark current tab
-
-// switch to new tab on movement
-// map movement to degree
-// switch to tab if within certain degree
 
 // placeholder favicon
 
-// list => radians => x,y
-// mouse x,y => radians
-
-// remove html before siwtching tabs
-// then add to newly siwtched tab
-
 // fix leftover hud, leftover mouselistener, errors
-
-// elliptical ring?
 
 // normalize css
 // better styling
@@ -126,9 +109,6 @@ function cleanUp () {
 // handle multiple windows
 
 // namespace #hud
-
-// switch to newly opened tab -> kills hud and no
-// mouse listen, and active hud and mouse listen on last pg
 
 // I figured out controller js is like an instance of a tab, so when I think
 // I'm adding the active tab to the newly switched page, I be wrong

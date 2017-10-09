@@ -29,6 +29,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 			// console.log(state)
 
+
 			sendResponse({
 				command: "showTabs",
 				payload: state
@@ -36,26 +37,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		});
 
 		break;
-
 	case "mouseMoved":
 		state.selectedTabIndex = determineSelectedTabIndex(
 			request.payload,
 			state.flywheel.length
 		);
-		console.log('mouseMoved')
-
-		// if (!isCurrentTab(state.selectedTabIndex)) {
-			sendResponse({command: "cleanUp"});
-		// }
 
 		getTabList()
 		.then(tabList => {
-			// if (state.flywheel[state.selectedTabIndex].id === window)
-			return switchToTabAt(tabList, state.selectedTabIndex);
+			// update tabList again since active tab may have changed
+			state.flywheel = withCoords(tabList.map(({
+				title,
+				favIconUrl,
+				id,
+				active
+			}) => ({
+				title,
+				favIconUrl,
+				id,
+				active
+			})));
+
+			// check if the newly selected tab is different from active tab
+			if (!state.flywheel[state.selectedTabIndex].active) {
+				console.log(`from ${sender.url} send cleanup, switch to`, state.selectedTabIndex, Date.now())
+				sendResponse({command: "cleanUp"});
+				return switchToTabAt(tabList, state.selectedTabIndex);
+			} else {
+				throw "Same tab selected.";
+			}
 		})
 		.then(tab => {
-			// console.log('tab', tab)
-
 			// pass state to newly activated tab
 			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
 				chrome.tabs.sendMessage(tabs[0].id, {
@@ -63,26 +75,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					payload: state
 				});
 			});
-		});
+			// maybe I can start preloading the flywheel to the new active tab
+			// before it is switched to
+		})
+		.catch(error => console.log(error));
 
 		break;
-
-	// case "cleaned":
-	// 	// console.log('cleaned')
-	// 	getWindow()
-	// 	.then(window => {
-	// 		return switchToTabAt(window, state.selectedTabIndex);
-	// 	})
-	// 	.then(tab => {
-	// 		// console.log('tab', tab)
-	// 		sendResponse({
-	// 			command: "showTabs",
-	// 			payload: state
-	// 		});
-	// 	});
-
-	// 	break;
-
 	default:
 		break;
 	}
@@ -90,18 +88,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	// need this to send async response
 	return true;
 });
-
-// duplicate functionality w/ getWindow
-// function getTabList () {
-// 	return new Promise((resolve, reject) => {
-// 		chrome.windows.getLastFocused({populate: true}, window => {
-// 			resolve(window.tabs.map(tab => ({
-// 				title: tab.title,
-// 				favIconUrl: tab.favIconUrl
-// 			})));
-// 		});
-// 	});
-// }
 
 // returns argument list of tabs with coords added
 function withCoords (tabList) {
@@ -153,4 +139,3 @@ function switchToTabAt (tabList, index) {
 		});
 	});
 }
-
