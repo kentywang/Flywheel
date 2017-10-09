@@ -10,6 +10,7 @@ if (window == top) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.command) {
 	case "showTabs":
+		console.log('showtabs')
 		addToPage(request.payload);
 
 		break;
@@ -36,8 +37,7 @@ function onKeyUp (e) {
 
 function updatePosition (e) {
 	if (
-		Math.abs(e.movementX) > mouseSensitivityThreshold
-		|| Math.abs(e.movementY) > mouseSensitivityThreshold
+		Math.hypot(e.movementX, e.movementY) > mouseSensitivityThreshold
 		// && document.getElementById("hud")
 	) {
 		console.log('firingMouseMoved')

@@ -7,11 +7,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.action) {
 	case "keyDown":
 		// console.log('keyDown')
-		Promise.all([getTabList(), getActiveTab()])
-		.then(([tabList, selectedTabIndex]) => {
-			// only time we update the internal list of tabs is here
-			state.flywheel = withCoords(tabList);
-			state.selectedTabIndex = selectedTabIndex;
+		getTabList()
+		.then(tabList => {
+			// store culled property list with coords
+			state.flywheel = withCoords(tabList.map(({
+				title,
+				favIconUrl,
+				id,
+				active
+			}) => ({
+				title,
+				favIconUrl,
+				id,
+				active
+			})));
+
+			// store index of active tab
+			state.selectedTabIndex = state.flywheel.findIndex(tab => (
+				tab.active
+			));
+
+			// console.log(state)
 
 			sendResponse({
 				command: "showTabs",
@@ -32,9 +48,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			sendResponse({command: "cleanUp"});
 		// }
 
-		getWindow()
-		.then(window => {
-			return switchToTabAt(window, state.selectedTabIndex);
+		getTabList()
+		.then(tabList => {
+			// if (state.flywheel[state.selectedTabIndex].id === window)
+			return switchToTabAt(tabList, state.selectedTabIndex);
 		})
 		.then(tab => {
 			// console.log('tab', tab)
@@ -75,24 +92,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // duplicate functionality w/ getWindow
-function getTabList () {
-	return new Promise((resolve, reject) => {
-		chrome.windows.getLastFocused({populate: true}, window => {
-			resolve(window.tabs.map(tab => ({
-				title: tab.title,
-				favIconUrl: tab.favIconUrl
-			})));
-		});
-	});
-}
-
-function getActiveTab () {
-	return new Promise((resolve, reject) => {
-		chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-			resolve(tabs[0].index);
-		});
-	});
-}
+// function getTabList () {
+// 	return new Promise((resolve, reject) => {
+// 		chrome.windows.getLastFocused({populate: true}, window => {
+// 			resolve(window.tabs.map(tab => ({
+// 				title: tab.title,
+// 				favIconUrl: tab.favIconUrl
+// 			})));
+// 		});
+// 	});
+// }
 
 // returns argument list of tabs with coords added
 function withCoords (tabList) {
@@ -129,17 +138,17 @@ function determineSelectedTabIndex (movement, tabListLength) {
 	return Math.floor(radiansAtMouse / radiansPerTab);
 }
 
-function getWindow () {
+function getTabList () {
 	return new Promise((resolve, reject) => {
 		chrome.windows.getLastFocused({populate: true}, window => {
-			resolve(window);
+			resolve(window.tabs);
 		});
 	});
 }
 
-function switchToTabAt (window, index) {
+function switchToTabAt (tabList, index) {
 	return new Promise((resolve, reject) => {
-		chrome.tabs.update(window.tabs[index].id, {active: true}, tab => {
+		chrome.tabs.update(tabList[index].id, {active: true}, tab => {
 			resolve(tab);
 		});
 	});
