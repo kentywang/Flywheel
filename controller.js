@@ -1,7 +1,6 @@
 const tabDistFromCenterMultiplier = 20;
-const mouseSensitivityThreshold = 5;
 
-let canAddHud = true;
+// let canAddHud = true;
 
 function onKeyDown (e) {
 	// console.log('KEYDOWN')
@@ -22,11 +21,11 @@ function onKeyUp (e) {
 }
 
 function updatePosition (e) {
-	if (!e.altKey && !canAddHud) {
+	if (!e.altKey) {
 		// this is a bandage solution to problem with the rare keyup being lost 
 		// in between tab switches
 		cleanUp();
-	} else if (Math.hypot(e.movementX, e.movementY) > mouseSensitivityThreshold) {
+	} else {
 		chrome.runtime.sendMessage({
 			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
@@ -34,8 +33,9 @@ function updatePosition (e) {
 	}
 }
 
-function addToPage ({flywheel, selectedTabIndex}) {
-	if (canAddHud) {
+function addToPage ({flywheel, activeTabIndex, selectedTabIndex}) {
+	// if (canAddHud) {
+		cleanUp();
 		// create ordered list of tabs
 		const hud = document.createElement("div");
 		hud.setAttribute("id", "hud");
@@ -66,6 +66,10 @@ function addToPage ({flywheel, selectedTabIndex}) {
 				item.classList.add("selected");
 			}
 
+			if (i === activeTabIndex) {
+				item.classList.add("active");
+			}
+
 			// add item to list
 			ring.appendChild(item);
 		});
@@ -78,8 +82,8 @@ function addToPage ({flywheel, selectedTabIndex}) {
 
 		window.addEventListener("keyup", onKeyUp);
 		
-		canAddHud = false;
-	}
+		// canAddHud = false;
+	// }
 }
 
 function handleVisibilityChange() {
@@ -90,14 +94,16 @@ function handleVisibilityChange() {
 }
 
 function cleanUp () {
-	document.getElementById("hud").remove();
-	document.removeEventListener("mousemove", updatePosition);
-	document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
+	if (document.getElementById("hud")) {
+		document.getElementById("hud").remove();
+		document.removeEventListener("mousemove", updatePosition);
+		document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
 
-	window.removeEventListener("keyup", onKeyUp);
+		window.removeEventListener("keyup", onKeyUp);
+	}
 
 	// promisify this?
-	canAddHud = true;
+	// canAddHud = true;
 }
 
 // if (window == top) {
@@ -107,7 +113,7 @@ function cleanUp () {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.command) {
 	case "showHud":
-		// console.log('addtopage from updatepos resp')
+		console.log('addtopage from updatepos resp')
 		addToPage(request.payload);
 
 		break;
@@ -118,35 +124,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // tasks:
 
-// placeholder favicon
-
 // fix leftover hud [DONE]
 // leftover mouselistener [DONE]
-// errors
+// errors [DONE]
+// get pointerlock working [DONE]
+// get better mousetracking [DONE]
+// switching to incorrect tabs on input [DONE]
+	// reason: divvying up sections wrong.
+// I think I solved the lefthover hud issue (not the most elegant solution, [DONE]
+	// using state instaed of figuring out root)
+// sticky hud, unsticks after keydown and keyup [DONE]
+	// (my guess is keyup not being detected)
+// page sometimes not detecting any key events until mouseclick [DONE]
+	// think it's cuz focus is on console
+// radial distance from first hold [DONE]
+
+// placeholder favicon
+	// give icons nice border radius!
 
 // normalize css
 // better styling
-
-// get pointerlock working [DONE]
-// get better mousetracking
 
 // handle multiple windows
 
 // namespace #hud
 
-// switching to incorrect tabs on input
-// reason: divvying up sections wrong.
+// merge state and pointer
 
-// visibility api may be my key to pointerlock?
+// hud color/bold issues
 
-// I think I solved the lefthover hud issue (not the most elegant solution,
-// using state instaed of figuring out root)
+// selectedtabindex wrong values??
 
-// sticky hud, unsticks after keydown and keyup
-// (my guess is keyup not being detected)
+// implement buffer zone for selected tab?
 
-// page sometimes not detecting any key events until mouseclick
-// think it's cuz focus is on console
-// window focus doesn't seem to work
-
-// radial distance from first hold
+// snapping/slighty-sticky tabs?

@@ -22,3 +22,7 @@
 #hud > ol > li.selected {
 	color: red;
 }
+
+#hud > ol > li.active {
+	font-weight: bold;
+}
