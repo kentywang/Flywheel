@@ -156,3 +156,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // selectedtabindex wrong values??
 
 // implement buffer zone for selected tab?
+
+// snapping/slighty-sticky tabs?
