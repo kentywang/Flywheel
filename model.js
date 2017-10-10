@@ -35,6 +35,7 @@ class Pointer {
 		this.hypot = Math.hypot(this.x, this.y);
 
 		// swap arg order for atan2 to rotate 90 degrees
+		// negate y because movement's positive y is down
 		this.radiansAtMouse = Math.atan2(this.x, -this.y);
 	}
 
@@ -52,7 +53,7 @@ class Pointer {
 		
 		this.resetCoords(this.x / ratio, this.y / ratio);
 	}
-};
+}
 
 const pointer = new Pointer(mouseSensitivityThreshold);
 
@@ -92,9 +93,9 @@ function withCoords (tabList) {
 }
 
 function determineSelectedTabIndex (radiansAtMouse, tabListLength) {
-	// movement.x: left-, right+
-	// movement.y: up-, down+
 	const radiansPerTab = (2 * Math.PI) / tabListLength;
+
+	// offset to rotate tracking clockwise half a tab unit
 	const offset = radiansPerTab / 2;
 
 	// convert negative radians to positive
@@ -102,9 +103,10 @@ function determineSelectedTabIndex (radiansAtMouse, tabListLength) {
 		radiansAtMouse += (2 * Math.PI);
 	}
 
-	// console.log(radiansAtMouse, Math.floor(radiansAtMouse / radiansPerTab))
+	// console.log(radiansAtMouse, radiansPerTab, Math.floor((radiansAtMouse + offset) / radiansPerTab) % tabListLength);
 
-	return Math.floor((radiansAtMouse + offset) / radiansPerTab);
+	// need modulo because the radians with offset can exceed 2π
+	return Math.floor((radiansAtMouse + offset) / radiansPerTab) % tabListLength;
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -182,7 +184,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 				id,
 				active
 			})));
-			console.log(state.selectedTabIndex, state.flywheel.length)
+
+			// console.log(state.selectedTabIndex, state.flywheel.length)
+
 			state.activeTabIndex = state.flywheel.findIndex(tab => (
 				tab.active
 			));

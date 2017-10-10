@@ -1,6 +1,6 @@
 const tabDistFromCenterMultiplier = 20;
 
-let canAddHud = true;
+// let canAddHud = true;
 
 function onKeyDown (e) {
 	// console.log('KEYDOWN')
@@ -21,7 +21,7 @@ function onKeyUp (e) {
 }
 
 function updatePosition (e) {
-	if (!e.altKey && !canAddHud) {
+	if (!e.altKey) {
 		// this is a bandage solution to problem with the rare keyup being lost 
 		// in between tab switches
 		cleanUp();
@@ -34,7 +34,8 @@ function updatePosition (e) {
 }
 
 function addToPage ({flywheel, activeTabIndex, selectedTabIndex}) {
-	if (canAddHud) {
+	// if (canAddHud) {
+		cleanUp();
 		// create ordered list of tabs
 		const hud = document.createElement("div");
 		hud.setAttribute("id", "hud");
@@ -81,8 +82,8 @@ function addToPage ({flywheel, activeTabIndex, selectedTabIndex}) {
 
 		window.addEventListener("keyup", onKeyUp);
 		
-		canAddHud = false;
-	}
+		// canAddHud = false;
+	// }
 }
 
 function handleVisibilityChange() {
@@ -93,14 +94,16 @@ function handleVisibilityChange() {
 }
 
 function cleanUp () {
-	document.getElementById("hud").remove();
-	document.removeEventListener("mousemove", updatePosition);
-	document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
+	if (document.getElementById("hud")) {
+		document.getElementById("hud").remove();
+		document.removeEventListener("mousemove", updatePosition);
+		document.removeEventListener("webkitvisibilitychange", handleVisibilityChange);
 
-	window.removeEventListener("keyup", onKeyUp);
+		window.removeEventListener("keyup", onKeyUp);
+	}
 
 	// promisify this?
-	canAddHud = true;
+	// canAddHud = true;
 }
 
 // if (window == top) {
@@ -137,6 +140,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // radial distance from first hold [DONE]
 
 // placeholder favicon
+	// give icons nice border radius!
 
 // normalize css
 // better styling
@@ -150,3 +154,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // hud color/bold issues
 
 // selectedtabindex wrong values??
+
+// implement buffer zone for selected tab?
