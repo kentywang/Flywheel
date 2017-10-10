@@ -1,5 +1,4 @@
 const tabDistFromCenterMultiplier = 20;
-const mouseSensitivityThreshold = 5;
 
 let canAddHud = true;
 
@@ -26,7 +25,7 @@ function updatePosition (e) {
 		// this is a bandage solution to problem with the rare keyup being lost 
 		// in between tab switches
 		cleanUp();
-	} else if (Math.hypot(e.movementX, e.movementY) > mouseSensitivityThreshold) {
+	} else {
 		chrome.runtime.sendMessage({
 			action: "mouseMoved",
 			payload: {x: e.movementX, y: e.movementY}
@@ -34,7 +33,7 @@ function updatePosition (e) {
 	}
 }
 
-function addToPage ({flywheel, selectedTabIndex}) {
+function addToPage ({flywheel, activeTabIndex, selectedTabIndex}) {
 	if (canAddHud) {
 		// create ordered list of tabs
 		const hud = document.createElement("div");
@@ -64,6 +63,10 @@ function addToPage ({flywheel, selectedTabIndex}) {
 			// highlight selected tab
 			if (i === selectedTabIndex) {
 				item.classList.add("selected");
+			}
+
+			if (i === activeTabIndex) {
+				item.classList.add("active");
 			}
 
 			// add item to list
@@ -107,7 +110,7 @@ function cleanUp () {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (request.command) {
 	case "showHud":
-		// console.log('addtopage from updatepos resp')
+		console.log('addtopage from updatepos resp')
 		addToPage(request.payload);
 
 		break;
@@ -118,35 +121,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // tasks:
 
-// placeholder favicon
-
 // fix leftover hud [DONE]
 // leftover mouselistener [DONE]
-// errors
+// errors [DONE]
+// get pointerlock working [DONE]
+// get better mousetracking [DONE]
+// switching to incorrect tabs on input [DONE]
+	// reason: divvying up sections wrong.
+// I think I solved the lefthover hud issue (not the most elegant solution, [DONE]
+	// using state instaed of figuring out root)
+// sticky hud, unsticks after keydown and keyup [DONE]
+	// (my guess is keyup not being detected)
+// page sometimes not detecting any key events until mouseclick [DONE]
+	// think it's cuz focus is on console
+// radial distance from first hold [DONE]
+
+// placeholder favicon
 
 // normalize css
 // better styling
-
-// get pointerlock working [DONE]
-// get better mousetracking
 
 // handle multiple windows
 
 // namespace #hud
 
-// switching to incorrect tabs on input
-// reason: divvying up sections wrong.
+// merge state and pointer
 
-// visibility api may be my key to pointerlock?
+// hud color/bold issues
 
-// I think I solved the lefthover hud issue (not the most elegant solution,
-// using state instaed of figuring out root)
-
-// sticky hud, unsticks after keydown and keyup
-// (my guess is keyup not being detected)
-
-// page sometimes not detecting any key events until mouseclick
-// think it's cuz focus is on console
-// window focus doesn't seem to work
-
-// radial distance from first hold
+// selectedtabindex wrong values??

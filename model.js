@@ -1,7 +1,60 @@
 const state = {
 	flywheel: [],
+	activeTabIndex: null,
 	selectedTabIndex: null
 };
+
+const mouseSensitivityThreshold = 50;
+
+class Pointer {
+	constructor (sensitivity) {
+		this.sensitivity = sensitivity;
+
+		this.x = 0;
+		this.y = 0;
+
+		this.hypot = 0;
+		this.radiansAtMouse = null;
+	}
+
+	updateCoords ({x, y}) {
+		this.x += x;
+		this.y += y;
+
+		this.updateDerivs();
+	}
+
+	resetCoords (x = 0, y = 0) {
+		this.x = x;
+		this.y = y;
+
+		this.updateDerivs();
+	}
+
+	updateDerivs() {
+		this.hypot = Math.hypot(this.x, this.y);
+
+		// swap arg order for atan2 to rotate 90 degrees
+		this.radiansAtMouse = Math.atan2(this.x, -this.y);
+	}
+
+	overThreshold () {
+		// console.log(this.hypot);
+
+		if (this.hypot > this.sensitivity) {
+			this.pullBackCoords();
+			return true;
+		}
+	}
+
+	pullBackCoords () {
+		const ratio = this.hypot / this.sensitivity;
+		
+		this.resetCoords(this.x / ratio, this.y / ratio);
+	}
+};
+
+const pointer = new Pointer(mouseSensitivityThreshold);
 
 function getTabList () {
 	return new Promise((resolve, reject) => {
@@ -38,14 +91,11 @@ function withCoords (tabList) {
 	});
 }
 
-function determineSelectedTabIndex (movement, tabListLength) {
+function determineSelectedTabIndex (radiansAtMouse, tabListLength) {
 	// movement.x: left-, right+
 	// movement.y: up-, down+
 	const radiansPerTab = (2 * Math.PI) / tabListLength;
 	const offset = radiansPerTab / 2;
-
-	// swap arg order to rotate 90 degrees
-	let radiansAtMouse = Math.atan2(movement.x, -movement.y);
 
 	// convert negative radians to positive
 	if (radiansAtMouse < 0) {
@@ -77,9 +127,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			})));
 
 			// store index of active tab
-			state.selectedTabIndex = state.flywheel.findIndex(tab => (
+			state.activeTabIndex = state.flywheel.findIndex(tab => (
 				tab.active
 			));
+
+			state.selectedTabIndex = null;
 
 			// console.log(state)
 
@@ -87,16 +139,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 				command: "showTabs",
 				payload: state
 			});
+
+			pointer.resetCoords();
 		});
 
 		break;
 	case "mouseMoved":
-		state.selectedTabIndex = determineSelectedTabIndex(
-			request.payload,
-			state.flywheel.length
-		);
+		pointer.updateCoords(request.payload);
 
-		getTabList()
+		state.selectedTabIndex = pointer.overThreshold() ?
+			determineSelectedTabIndex(
+				pointer.radiansAtMouse,
+				state.flywheel.length
+			) :
+			null;
+
+		new Promise((resolve, reject) => {
+			// check if the newly selected tab is different from active tab
+			if (
+				state.flywheel[state.selectedTabIndex]
+				&& !state.flywheel[state.selectedTabIndex].active
+			) {
+				// console.log(`from ${sender.url}, switch to`, state.selectedTabIndex, Date.now())
+				resolve(switchToTabAt(state.flywheel, state.selectedTabIndex));
+			} else {
+				resolve(true);
+			}
+		})
+		.then(() => {
+			return getTabList();
+		})
 		.then(tabList => {
 			// update tabList again since active tab may have changed
 			state.flywheel = withCoords(tabList.map(({
@@ -110,17 +182,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 				id,
 				active
 			})));
+			console.log(state.selectedTabIndex, state.flywheel.length)
+			state.activeTabIndex = state.flywheel.findIndex(tab => (
+				tab.active
+			));
 
-			// check if the newly selected tab is different from active tab
-			if (!state.flywheel[state.selectedTabIndex].active) {
-				// console.log(`from ${sender.url} send cleanup, switch to`, state.selectedTabIndex, Date.now())
-				// sendResponse({command: "cleanUp"});
-				return switchToTabAt(tabList, state.selectedTabIndex);
-			} else {
-				throw "Same tab selected.";
-			}
-		})
-		.then(tab => {
 			// pass state to newly activated tab
 			chrome.tabs.query({active: true, currentWindow: true}, tabs => {
 				chrome.tabs.sendMessage(tabs[0].id, {
@@ -132,7 +198,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			// before it is switched to
 		})
 		.catch(error => {
-			// console.log(error);
+			console.log(error);
 		});
 
 		break;
