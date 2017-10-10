@@ -1,6 +1,7 @@
 #hud,
 #hud * {
 	all: initial;
+	cursor: none;
 }
 
 #hud {
@@ -9,7 +10,6 @@
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	cursor: none;
 	z-index: 2147483647;
 }
 
