@@ -1,3 +1,8 @@
+#hud,
+#hud * {
+	all: initial;
+}
+
 #hud {
 	position: fixed;
 	top: 0;
@@ -16,6 +21,7 @@
 }
 
 #hud > ol > li {
+	font-family: Arial;
 	position: absolute;
 }
 
