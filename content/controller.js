@@ -6,7 +6,10 @@ const tabDistFromCenterMultiplier = 20;
 function addToPage({ flywheel, activeTabIndex, selectedTabIndex }) {
   // if (canAddHud) {
   // canAddHud = false;
-  cleanUp();
+  if (document.getElementById('hud')) {
+    console.log('cleanup from addtopg');
+    cleanUp();
+  }
 
   new Promise((resolve) => {
     resolve(window.addEventListener('keyup', onKeyUp));
@@ -69,14 +72,12 @@ function addToPage({ flywheel, activeTabIndex, selectedTabIndex }) {
 
 
 function cleanUp() {
-  if (document.getElementById('hud')) {
     document.getElementById('hud').remove();
 
     document.removeEventListener('mousemove', updatePosition);
     document.removeEventListener('webkitvisibilitychange', handleVisibilityChange);
 
     window.removeEventListener('keyup', onKeyUp);
-  }
 
   // promisify this?
   // canAddHud = true;

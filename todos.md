@@ -39,3 +39,5 @@
 - keyup not triggered sometimes, not even from fallthroughs
 
 - separate functionality needed for updating hud vs adding new hud (for when changing selected tab)
+
+- switching to new tabs makes hud sticky (maybe I could only add to page once start moving on new pg)
