@@ -2,6 +2,7 @@ const tabDistFromCenterMultiplier = 20;
 
 let canAddHud = true;
 
+
 function addToPage({ flywheel, activeTabIndex, selectedTabIndex }) {
   if (canAddHud) {
     cleanUp();
@@ -66,12 +67,6 @@ function addToPage({ flywheel, activeTabIndex, selectedTabIndex }) {
   }
 }
 
-function handleVisibilityChange() {
-  if (document.webkitHidden) {
-    console.log('cleanup from tabhide');
-    cleanUp();
-  }
-}
 
 function cleanUp() {
   if (document.getElementById('hud')) {
@@ -87,6 +82,15 @@ function cleanUp() {
   canAddHud = true;
 }
 
+
+function handleVisibilityChange() {
+  if (document.webkitHidden) {
+    console.log('cleanup from tabhide');
+    cleanUp();
+  }
+}
+
+
 function onKeyDown(e) {
   // console.log('KEYDOWN')
   if (e.key === 'Alt') {
@@ -97,6 +101,7 @@ function onKeyDown(e) {
   }
 }
 
+
 function onKeyUp(e) {
   console.log('KEYUP');
   if (e.key === 'Alt') {
@@ -104,6 +109,7 @@ function onKeyUp(e) {
     cleanUp();
   }
 }
+
 
 function updatePosition(e) {
   if (!e.altKey) {
@@ -117,6 +123,7 @@ function updatePosition(e) {
     });
   }
 }
+
 
 // if (window == top) {
 window.addEventListener('keydown', onKeyDown);

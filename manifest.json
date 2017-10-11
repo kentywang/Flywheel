@@ -6,8 +6,8 @@
   "version": "1.0",
 
   "browser_action": {
-    "default_icon": "icon.png",
-    "default_popup": "popup.html"
+    "default_icon": "browser/icon.png",
+    "default_popup": "browser/popup.html"
   },
   "permissions": [
     "http://*/*",
@@ -15,13 +15,13 @@
     "tabs"
   ],
   "background": {
-    "scripts": ["model.js"]
+    "scripts": ["background/model.js"]
   },
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["controller.js"],
-      "css": ["styles.css"],
+      "js": ["content/controller.js"],
+      "css": ["content/styles.css"],
       "run_at": "document_start"
     }
   ]

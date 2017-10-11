@@ -1,3 +1,5 @@
+import Pointer from './Pointer';
+
 const state = {
   flywheel: [],
   activeTabIndex: null,
@@ -6,57 +8,6 @@ const state = {
 
 const mouseSensitivityThreshold = 50;
 
-class Pointer {
-  constructor(sensitivity) {
-    this.sensitivity = sensitivity;
-
-    this.x = 0;
-    this.y = 0;
-
-    this.hypot = 0;
-    this.radiansAtMouse = null;
-  }
-
-  updateCoords({ x, y }) {
-    this.x += x;
-    this.y += y;
-
-    this.updateDerivs();
-  }
-
-  resetCoords(x = 0, y = 0) {
-    this.x = x;
-    this.y = y;
-
-    this.updateDerivs();
-  }
-
-  updateDerivs() {
-    this.hypot = Math.hypot(this.x, this.y);
-
-    // swap arg order for atan2 to rotate 90 degrees
-    // negate y because movement's positive y is down
-    this.radiansAtMouse = Math.atan2(this.x, -this.y);
-  }
-
-  overThreshold() {
-    // console.log(this.hypot);
-
-    if (this.hypot > this.sensitivity) {
-      this.pullBackCoords();
-      return true;
-    }
-    return false;
-  }
-
-  pullBackCoords() {
-    const ratio = this.hypot / this.sensitivity;
-
-    this.resetCoords(this.x / ratio, this.y / ratio);
-  }
-}
-
-const pointer = new Pointer(mouseSensitivityThreshold);
 
 function getTabList() {
   return new Promise((resolve) => {
@@ -66,6 +17,7 @@ function getTabList() {
   });
 }
 
+
 function switchToTabAt(tabList, index) {
   return new Promise((resolve) => {
     chrome.tabs.update(tabList[index].id, { active: true }, (tab) => {
@@ -73,6 +25,7 @@ function switchToTabAt(tabList, index) {
     });
   });
 }
+
 
 // returns argument list of tabs with coords added
 function withCoords(tabList) {
@@ -92,6 +45,7 @@ function withCoords(tabList) {
     return tabWithCoords;
   });
 }
+
 
 function determineSelectedTabIndex(radiansAtMouse, tabListLength) {
   const radiansPerTab = (2 * Math.PI) / tabListLength;
@@ -113,6 +67,9 @@ function determineSelectedTabIndex(radiansAtMouse, tabListLength) {
   // need modulo because the radians with offset can exceed 2π
   return Math.floor((radiansAtMouse + offset) / radiansPerTab) % tabListLength;
 }
+
+
+const pointer = new Pointer(mouseSensitivityThreshold);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
@@ -218,3 +175,4 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // need this to send async response
   return true;
 });
+
