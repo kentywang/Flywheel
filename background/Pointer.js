@@ -1,4 +1,4 @@
-export default class Pointer {
+class Pointer {
   constructor(sensitivity) {
     this.sensitivity = sensitivity;
 

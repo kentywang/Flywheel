@@ -15,7 +15,7 @@
     "tabs"
   ],
   "background": {
-    "scripts": ["background/model.js"]
+    "scripts": ["background/Pointer.js", "background/model.js"]
   },
   "content_scripts": [
     {

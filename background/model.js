@@ -1,5 +1,3 @@
-import Pointer from './Pointer';
-
 const state = {
   flywheel: [],
   activeTabIndex: null,
@@ -100,7 +98,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           // console.log(state)
 
           sendResponse({
-            command: 'showTabs',
+            command: 'showHud',
             payload: state,
           });
 

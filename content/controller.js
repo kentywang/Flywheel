@@ -92,7 +92,7 @@ function handleVisibilityChange() {
 
 
 function onKeyDown(e) {
-  // console.log('KEYDOWN')
+  console.log('KEYDOWN');
   if (e.key === 'Alt') {
     chrome.runtime.sendMessage({ action: 'keyDown' }, (response) => {
       // console.log('addtopage from keydown resp')
