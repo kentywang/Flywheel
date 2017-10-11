@@ -1,70 +1,70 @@
 const tabDistFromCenterMultiplier = 20;
 
-let canAddHud = true;
+// let canAddHud = true;
 
 
 function addToPage({ flywheel, activeTabIndex, selectedTabIndex }) {
-  if (canAddHud) {
-    cleanUp();
-    canAddHud = false;
+  // if (canAddHud) {
+  // canAddHud = false;
+  cleanUp();
 
-    new Promise((resolve) => {
-      resolve(window.addEventListener('keyup', onKeyUp));
-    })
-      .then(() => (
-        document.addEventListener('mousemove', updatePosition)
-      ))
-      .then(() => (
-        document.addEventListener('webkitvisibilitychange', handleVisibilityChange)
-      ))
-      .then(() => {
-        console.log('keyup prob attached');
+  new Promise((resolve) => {
+    resolve(window.addEventListener('keyup', onKeyUp));
+  })
+    .then(() => (
+      document.addEventListener('mousemove', updatePosition)
+    ))
+    .then(() => (
+      document.addEventListener('webkitvisibilitychange', handleVisibilityChange)
+    ))
+    .then(() => {
+      console.log('keyup prob attached');
 
-        // create ordered list of tabs
-        const hud = document.createElement('div');
-        hud.setAttribute('id', 'hud');
+      // create ordered list of tabs
+      const hud = document.createElement('div');
+      hud.setAttribute('id', 'hud');
 
-        const ring = document.createElement('ol');
-        hud.appendChild(ring);
+      const ring = document.createElement('ol');
+      hud.appendChild(ring);
 
-        flywheel.forEach((tab, i) => {
-          // create item in list
-          const item = document.createElement('li');
+      flywheel.forEach((tab, i) => {
+        // create item in list
+        const item = document.createElement('li');
 
-          // amplify coords and stringify with relevant CSS units
-          item.style.marginTop = `${tab.x * tabDistFromCenterMultiplier}vw`;
-          item.style.marginLeft = `${tab.y * tabDistFromCenterMultiplier}vw`;
+        // amplify coords and stringify with relevant CSS units
+        item.style.marginTop = `${tab.x * tabDistFromCenterMultiplier}vw`;
+        item.style.marginLeft = `${tab.y * tabDistFromCenterMultiplier}vw`;
 
-          // add title
-          item.appendChild(document.createTextNode(tab.title));
+        // add title
+        item.appendChild(document.createTextNode(tab.title));
 
-          // add favicon
-          const image = document.createElement('img');
-          image.src = tab.favIconUrl;
-          image.width = '32';
-          image.height = '32';
-          item.appendChild(image);
+        // add favicon
+        const image = document.createElement('img');
+        image.src = tab.favIconUrl;
+        image.width = '32';
+        image.height = '32';
+        item.appendChild(image);
 
-          // highlight selected tab
-          if (i === selectedTabIndex) {
-            item.classList.add('selected');
-          }
+        // highlight selected tab
+        if (i === selectedTabIndex) {
+          item.classList.add('selected');
+        }
 
-          if (i === activeTabIndex) {
-            item.classList.add('active');
-          }
+        if (i === activeTabIndex) {
+          item.classList.add('active');
+        }
 
-          // add item to list
-          ring.appendChild(item);
-        });
-
-        // add list to doc body
-        document.body.appendChild(hud);
-      })
-      .catch((error) => {
-        console.log(error);
+        // add item to list
+        ring.appendChild(item);
       });
-  }
+
+      // add list to doc body
+      document.body.appendChild(hud);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  // }
 }
 
 
@@ -79,7 +79,7 @@ function cleanUp() {
   }
 
   // promisify this?
-  canAddHud = true;
+  // canAddHud = true;
 }
 
 
@@ -115,6 +115,7 @@ function updatePosition(e) {
   if (!e.altKey) {
     // this is a bandage solution to problem with the rare keyup being lost
     // in between tab switches
+    console.log('cleanup from noaltkey');
     cleanUp();
   } else {
     chrome.runtime.sendMessage({
@@ -132,7 +133,7 @@ window.addEventListener('keydown', onKeyDown);
 chrome.runtime.onMessage.addListener((request) => {
   switch (request.command) {
     case 'showHud':
-      console.log('addtopage from updatepos resp');
+      console.log('addToPage from updatepos resp');
       addToPage(request.payload);
 
       break;

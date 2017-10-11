@@ -37,3 +37,5 @@
 - snapping/slighty-sticky tabs?
 
 - keyup not triggered sometimes, not even from fallthroughs
+
+- separate functionality needed for updating hud vs adding new hud (for when changing selected tab)
