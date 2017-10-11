@@ -1,0 +1,26 @@
+{
+  "name": "Flywheel",
+  "version": "1.0.0",
+  "description": "🏎️ Supersonic browser tabbing",
+  "main": "controller.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kentywang/Flywheel.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kentywang/Flywheel/issues"
+  },
+  "homepage": "https://github.com/kentywang/Flywheel#readme",
+  "devDependencies": {
+    "eslint": "^4.8.0",
+    "eslint-config-airbnb-base": "^12.0.2",
+    "eslint-plugin-import": "^2.7.0"
+  },
+  "dependencies": {}
+}
