@@ -1,34 +1,34 @@
 #hud,
 #hud * {
-	all: initial;
-	cursor: none;
+  all: initial;
+  cursor: none;
 }
 
 #hud {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
-	z-index: 2147483647;
+  height: 100vh;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  z-index: 2147483647;
 }
 
 #hud > ol {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 #hud > ol > li {
-	font-family: Arial;
-	position: absolute;
+  font-family: Arial;
+  position: absolute;
 }
 
 #hud > ol > li.selected {
-	color: red;
+  color: red;
 }
 
 #hud > ol > li.active {
-	font-weight: bold;
+  font-weight: bold;
 }
