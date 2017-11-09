@@ -1,5 +1,5 @@
 # Flywheel
-###🏎️ Supersonic browser tabbing
+### 🏎️ Supersonic browser tabbing
 ![](https://github.com/kentywang/Flywheel/blob/master/demo.gif) 
 
 When there's dozens of tabs open on a browser, the tab bar doesn't have room to show enough meaningful information about each tab, so navigation to a specific tab usually devolves into sequentially tabbing through the list until reaching the desired one.
